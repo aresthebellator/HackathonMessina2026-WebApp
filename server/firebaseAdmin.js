@@ -7,11 +7,13 @@ const adminAppName = 'wikingo-admin';
 const defaultServiceAccountPath = fileURLToPath(
   new URL('../wikingo-auth-firebase-adminsdk-fbsvc-831ab3aff6.json', import.meta.url)
 );
-const databaseURL =
+const defaultDatabaseURL =
   'https://wikingo-auth-default-rtdb.europe-west1.firebasedatabase.app';
 let adminApp;
 
-export function getFirebaseAdminApp(serviceAccountPath = defaultServiceAccountPath) {
+export function getFirebaseAdminApp(
+  serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || defaultServiceAccountPath
+) {
   if (adminApp) return adminApp;
 
   let serviceAccount;
@@ -43,7 +45,7 @@ export function getFirebaseAdminApp(serviceAccountPath = defaultServiceAccountPa
           clientEmail: serviceAccount.client_email,
           privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'),
         }),
-        databaseURL,
+        databaseURL: process.env.FIREBASE_DATABASE_URL || defaultDatabaseURL,
       },
       adminAppName
     );

@@ -1,4 +1,4 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -14,20 +14,33 @@ import {
 } from 'firebase/auth';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 
-// Your web app's Firebase configuration
+const defaultFirebaseConfig = {
+  apiKey: 'AIzaSyBmpQK-J9ybGcRg5_zBol6jYo89AZz-bnE',
+  authDomain: 'wikingo-auth.firebaseapp.com',
+  databaseURL: 'https://wikingo-auth-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId: 'wikingo-auth',
+  storageBucket: 'wikingo-auth.firebasestorage.app',
+  messagingSenderId: '226310225271',
+  appId: '1:226310225271:web:531801f183acd93d8bb572',
+  measurementId: 'G-W87FMHCNY6',
+};
+
+// Web Firebase configuration is public, but environment overrides keep deployments portable.
 export const firebaseConfig = {
-  apiKey: "AIzaSyBmpQK-J9ybGcRg5_zBol6jYo89AZz-bnE",
-  authDomain: "wikingo-auth.firebaseapp.com",
-  databaseURL: "https://wikingo-auth-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "wikingo-auth",
-  storageBucket: "wikingo-auth.firebasestorage.app",
-  messagingSenderId: "226310225271",
-  appId: "1:226310225271:web:531801f183acd93d8bb572",
-  measurementId: "G-W87FMHCNY6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || defaultFirebaseConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || defaultFirebaseConfig.authDomain,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || defaultFirebaseConfig.databaseURL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || defaultFirebaseConfig.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || defaultFirebaseConfig.storageBucket,
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || defaultFirebaseConfig.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || defaultFirebaseConfig.appId,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || defaultFirebaseConfig.measurementId,
 };
 
 // Initialize Firebase (singleton pattern safe for HMR and testing)
-export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const existingApp = getApps().find((candidate) => candidate.name === '[DEFAULT]');
+export const app = existingApp ?? initializeApp(firebaseConfig);
 
 // Initialize Auth
 export const auth = getAuth(app);

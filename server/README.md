@@ -1,10 +1,13 @@
 # Firebase Admin (server only)
 
 Keep the Firebase service-account JSON file at the project root with the name
-`wikingo-auth-firebase-adminsdk-fbsvc-831ab3aff6.json`. It must be the private
+`wikingo-auth-firebase-adminsdk-fbsvc-831ab3aff6.json`, or set
+`FIREBASE_SERVICE_ACCOUNT_PATH` to another local path. It must be the private
 service-account key downloaded from Firebase Console → Project settings →
-Service accounts. This filename is ignored by Git; never commit the JSON or
+Service accounts. The filename is ignored by Git; never commit the JSON or
 expose it through Vite or browser code.
+
+Set `FIREBASE_DATABASE_URL` when the server uses a different Firebase project.
 
 Server-side modules can import `getAdminDatabase` from `./firebaseAdmin.js` and
 call it to obtain the Admin SDK Realtime Database instance. Admin access bypasses
