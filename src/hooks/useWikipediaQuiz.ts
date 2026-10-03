@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuizStore } from '@/store/useQuizStore';
-import { fetchArticleBatch, fetchArticlesForTopic } from '@/services/wikipedia';
-import { generateQuizQuestions } from '@/services/quizGenerator';
-import { getUnitForLesson, getLessonTopic } from '@/lib/unitsData';
+import { fetchArticleBatch, fetchArticleForTopic, fetchRandomSummary } from '@/services/wikipedia';
+import { generateQuizQuestions, generateQuestionsForArticle } from '@/services/quizGenerator';
+import { getLessonTopic } from '@/lib/unitsData';
 import { Question } from '@/types';
 
 export function useWikipediaQuiz() {
@@ -31,30 +31,30 @@ export function useWikipediaQuiz() {
   }, []);
 
   /**
-   * Fetch a fresh batch for a specific numbered lesson according to its unit topic
+   * Fetch an article for a specific numbered lesson according to its unit topic
+   * and generate 5-7 micro-questions matching Android's QuestionGenerator.
    */
   const loadLesson = useCallback(
-    async (lessonNumber: number, count: number = 5): Promise<Question[]> => {
+    async (lessonNumber: number, _count: number = 5): Promise<Question[]> => {
       setLoadingRound(true, lessonNumber);
       try {
-        const unit = getUnitForLesson(lessonNumber);
         const specificTopic = getLessonTopic(lessonNumber, language);
-        const keywords = [specificTopic, ...unit.keywords];
-        const cacheKey = ['wikipedia-lesson', lessonNumber, language];
+        const cacheKey = ['wikipedia-lesson-article', lessonNumber, specificTopic, language];
 
-        const articles = await queryClient.fetchQuery({
+        const article = await queryClient.fetchQuery({
           queryKey: cacheKey,
-          queryFn: () => fetchArticlesForTopic(keywords, count, language),
+          queryFn: () => fetchArticleForTopic(specificTopic, language),
           staleTime: 1000 * 60 * 10,
         });
 
-        const questions = generateQuizQuestions(articles);
+        const questions = generateQuestionsForArticle(article, language);
         startRound(questions, lessonNumber);
         return questions;
       } catch (err) {
         console.error('Failed to load lesson:', err);
-        const fallbackArticles = await fetchArticleBatch(count, language);
-        const fallbackQuestions = generateQuizQuestions(fallbackArticles);
+        const specificTopic = getLessonTopic(lessonNumber, language);
+        const fallbackArticle = await fetchArticleForTopic(specificTopic, language);
+        const fallbackQuestions = generateQuestionsForArticle(fallbackArticle, language);
         startRound(fallbackQuestions, lessonNumber);
         return fallbackQuestions;
       } finally {
@@ -65,21 +65,14 @@ export function useWikipediaQuiz() {
   );
 
   /**
-   * Fetch a fresh batch and generate questions, utilizing React Query cache
+   * Fetch a fresh random article lesson and generate questions matching Android's getRandomLessonUseCase
    */
   const loadNewRound = useCallback(
     async (count: number = 5): Promise<Question[]> => {
       setLoadingRound(true);
       try {
-        const cacheKey = ['wikipedia-batch', language];
-        
-        const articles = await queryClient.fetchQuery({
-          queryKey: cacheKey,
-          queryFn: () => fetchArticleBatch(count, language),
-          staleTime: 1000 * 60 * 10, // 10 minutes cache
-        });
-
-        const questions = generateQuizQuestions(articles);
+        const article = await fetchRandomSummary({ lang: language });
+        const questions = generateQuestionsForArticle(article, language);
         startRound(questions);
         return questions;
       } catch (err) {
@@ -92,7 +85,7 @@ export function useWikipediaQuiz() {
         setLoadingRound(false);
       }
     },
-    [language, queryClient, setLoadingRound, startRound]
+    [language, setLoadingRound, startRound]
   );
 
   /**

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Bookmark, Globe, WifiOff, Shuffle, Play, Settings, History, User } from 'lucide-react';
+import { Zap, Bookmark, Globe, WifiOff, Shuffle, Play, Settings, History, User, UserCheck, Compass } from 'lucide-react';
 import { HeartLives } from '@/components/ui/HeartLives';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { SavedArticlesModal } from './SavedArticlesModal';
@@ -131,10 +131,25 @@ export const HomeDashboard: React.FC = () => {
             {/* Auth / Account Profile Button */}
             <button
               onClick={openAuth}
-              className="p-2 rounded-2xl border-2 border-[#E5E5E5] dark:border-[#37464F] bg-white dark:bg-[#1E2D34] hover:bg-gray-50 dark:hover:bg-[#2A3B44] text-[#777777] dark:text-[#E5E7EB] transition-colors"
-              title={user?.isAnonymous ? t('profile_guest') : (user?.displayName || t('profile_title'))}
+              className="p-2 rounded-2xl border-2 border-[#E5E5E5] dark:border-[#37464F] bg-white dark:bg-[#1E2D34] hover:bg-gray-50 dark:hover:bg-[#2A3B44] text-[#777777] dark:text-[#E5E7EB] transition-colors relative"
+              title={user?.isAnonymous ? t('auth.guest_badge') : (user?.displayName || user?.email || t('auth.login_title'))}
             >
-              <User className="w-4 h-4 text-[#1CB0F6]" />
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt={user.displayName || 'User'}
+                  className="w-4 h-4 rounded-full object-cover"
+                />
+              ) : user && !user.isAnonymous ? (
+                <div className="relative">
+                  <UserCheck className="w-4 h-4 text-[#58CC02]" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#58CC02] ring-1 ring-white dark:ring-[#1E2D34]" />
+                </div>
+              ) : user?.isAnonymous ? (
+                <Compass className="w-4 h-4 text-[#FF9600]" />
+              ) : (
+                <User className="w-4 h-4 text-[#1CB0F6]" />
+              )}
             </button>
 
             {/* Settings & Accessibility Button */}

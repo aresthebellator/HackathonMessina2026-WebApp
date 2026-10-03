@@ -68,6 +68,8 @@ export interface Question {
   explanation: string;
   sourceUrl: string;
   categoryHint?: string;
+  wikiQuote?: string;
+  shouldOfferDeepening?: boolean;
 }
 
 export interface UserAnswer {
@@ -99,6 +101,7 @@ export interface QuizState {
   isDrawerOpen: boolean;
   lives: number;
   maxLives: number;
+  nextRechargeAtMillis?: number | null;
   isSoundEnabled: boolean;
   language: 'it' | 'en';
 }
@@ -168,6 +171,7 @@ export interface TopicHistory {
   totalQuestions: number;
   completedAt: number;
   xpEarned: number;
+  accuracy?: number;
 }
 
 export interface UserStats {
@@ -192,5 +196,13 @@ export interface UserProfile {
   completedLessons: number[];
   lessonStars: Record<number, number>;
   topicHistory: TopicHistory[];
+}
+
+export interface AuthUser {
+  uid: string;
+  displayName: string;
+  email: string | null;
+  isAnonymous: boolean;
+  photoURL?: string | null;
 }
 

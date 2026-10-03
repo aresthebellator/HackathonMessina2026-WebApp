@@ -48,7 +48,7 @@ describe('Quiz Store (Zustand)', () => {
 
   it('should initialize with default gamification values', () => {
     const state = useQuizStore.getState();
-    expect(state.lives).toBe(5);
+    expect(state.lives).toBe(10);
     expect(state.streak).toBeGreaterThanOrEqual(1);
     expect(state.feedbackStatus).toBe('idle');
   });
@@ -84,8 +84,8 @@ describe('Quiz Store (Zustand)', () => {
 
     expect(state.feedbackStatus).toBe('correct');
     expect(state.currentRound?.score).toBe(1);
-    expect(state.xp).toBe(initialXp + 15);
-    expect(state.lives).toBe(5);
+    expect(state.xp).toBe(initialXp + 10);
+    expect(state.lives).toBe(10);
   });
 
   it('should record wrong answer and decrement lives', () => {
@@ -104,7 +104,7 @@ describe('Quiz Store (Zustand)', () => {
     const state = useQuizStore.getState();
 
     expect(state.feedbackStatus).toBe('incorrect');
-    expect(state.lives).toBe(4);
+    expect(state.lives).toBe(9);
   });
 
   it('should toggle bookmarks for articles', () => {

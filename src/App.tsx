@@ -8,8 +8,12 @@ import { HistoryModal } from '@/components/history/HistoryModal';
 import { HackathonEasterEggModal } from '@/components/common/HackathonEasterEggModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { WelcomeModal } from '@/components/auth/WelcomeModal';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 export function App() {
+  // Listen to Firebase Auth state changes globally
+  useFirebaseAuth();
+
   const currentRound = useQuizStore((s) => s.currentRound);
   const isDarkMode = useQuizStore((s) => s.isDarkMode);
   const fontSize = useQuizStore((s) => s.fontSize);

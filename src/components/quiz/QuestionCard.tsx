@@ -1,10 +1,11 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Bookmark, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bookmark, ExternalLink, CheckCircle2, XCircle, HelpCircle, X } from 'lucide-react';
 import { Question } from '@/types';
 import { useQuizStore } from '@/store/useQuizStore';
 import { useTranslation } from '@/lib/i18n';
 import { MascotReaction } from '@/components/quiz/MascotReaction';
+import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
 interface QuestionCardProps {
@@ -19,6 +20,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   const toggleBookmark = useQuizStore((s) => s.toggleBookmark);
   const isArticleSaved = useQuizStore((s) => s.isArticleSaved(question.article.pageid));
   const { t } = useTranslation();
+  const [isTopicHelpOpen, setIsTopicHelpOpen] = useState(false);
 
   const currentIndex = currentRound?.currentIndex ?? 0;
   const totalQuestions = currentRound?.questions.length ?? 5;
@@ -38,29 +40,27 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 py-4 flex flex-col gap-5">
+    <div className="w-full max-w-2xl mx-auto px-4 py-4 flex flex-col gap-4">
       {/* Mascot Comic Reaction Speech Bubble */}
       <MascotReaction
         message={t('trainer.question_header', { current: currentIndex + 1, total: totalQuestions })}
       />
 
-      {/* Question metadata badge & bookmark */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      {/* Topic Pill Badge matching Android DuoBlueLight badge */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-xl bg-[#DDF4FF] dark:bg-[#1CB0F6]/20 text-[#0C70A2] dark:text-[#38BDF8] border border-[#BAE6FD] dark:border-[#0284C7]/40">
+            WIKIPEDIA • {question.article.title.toUpperCase()}
+          </span>
           <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-xl bg-[#E5E5E5]/60 dark:bg-[#37464F] text-[#777777] dark:text-[#9CA3AF]">
             {getQuestionTypeLabel()}
           </span>
-          {question.categoryHint && (
-            <span className="text-xs font-bold text-[#AFAFAF] dark:text-[#64748B] hidden sm:inline">
-              • {question.categoryHint}
-            </span>
-          )}
         </div>
 
         <button
           onClick={() => toggleBookmark(question.article)}
           className={cn(
-            'p-2 rounded-xl border-2 transition-all flex items-center gap-1.5 text-xs font-bold',
+            'p-2 rounded-xl border-2 transition-all flex items-center gap-1.5 text-xs font-bold shrink-0',
             isArticleSaved
               ? 'bg-[#FFF7ED] dark:bg-[#78350F]/30 border-[#FED7AA] dark:border-[#92400E] text-[#FF9600]'
               : 'bg-white dark:bg-[#1E2D34] border-[#E5E5E5] dark:border-[#37464F] text-[#777777] dark:text-[#9CA3AF] hover:border-[#D5D5D5]'
@@ -79,11 +79,21 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
         key={question.id + '_prompt'}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-4"
+        className="space-y-3"
       >
         <h2 className="text-xl sm:text-2xl font-extrabold text-[#3C3C3C] dark:text-white leading-snug">
           {question.prompt}
         </h2>
+
+        {/* Explain Topic Outline Button (Android explain_topic parity) */}
+        <button
+          type="button"
+          onClick={() => setIsTopicHelpOpen(true)}
+          className="w-full py-2.5 px-4 rounded-2xl border-2 border-[#E5E5E5] dark:border-[#37464F] hover:border-[#1CB0F6] text-xs sm:text-sm font-black text-[#1CB0F6] dark:text-[#38BDF8] bg-transparent hover:bg-[#DDF4FF]/40 dark:hover:bg-[#1CB0F6]/10 transition-all text-center flex items-center justify-center gap-2 active:scale-98"
+        >
+          <HelpCircle className="w-4 h-4" />
+          <span>{t('trainer.explain_topic')}</span>
+        </button>
 
         {/* Optional Article Image Card */}
         {question.article.thumbnail && (
@@ -196,6 +206,62 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question }) => {
           );
         })}
       </motion.div>
+
+      {/* Topic Explanation Modal (Android isTopicHelpVisible AlertDialog parity) */}
+      <AnimatePresence>
+        {isTopicHelpOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-md bg-white dark:bg-[#1E2D34] rounded-3xl border-2 border-[#E5E5E5] dark:border-[#37464F] shadow-2xl overflow-hidden flex flex-col p-6 space-y-4"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="text-xl font-extrabold text-[#3C3C3C] dark:text-white leading-tight">
+                    {question.article.title}
+                  </h3>
+                  {question.article.description && (
+                    <p className="text-sm font-bold text-[#777777] dark:text-[#9CA3AF] mt-1">
+                      {question.article.description}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsTopicHelpOpen(false)}
+                  className="p-1.5 rounded-xl text-[#AFAFAF] hover:text-[#3C3C3C] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="text-sm text-[#4B4B4B] dark:text-[#E5E7EB] leading-relaxed max-h-60 overflow-y-auto">
+                {question.article.extract ? (
+                  <p>
+                    {question.article.extract.slice(0, 500)}
+                    {question.article.extract.length > 500 ? '...' : ''}
+                  </p>
+                ) : (
+                  <p className="italic text-[#777777] dark:text-[#9CA3AF]">
+                    {t('trainer.topic_help_unavailable')}
+                  </p>
+                )}
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  variant="blue"
+                  fullWidth
+                  onClick={() => setIsTopicHelpOpen(false)}
+                >
+                  {t('common.got_it')}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

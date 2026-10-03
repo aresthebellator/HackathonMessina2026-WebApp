@@ -1,5 +1,6 @@
 import { Article } from '@/types';
 import { OFFLINE_ARTICLES_EN, OFFLINE_ARTICLES_IT } from '@/lib/offlinePool';
+import { getCuratedOfflineSummary } from '@/services/quizGenerator';
 
 const WIKI_API_TIMEOUT = 7000;
 
@@ -183,3 +184,55 @@ export async function fetchArticleBatch(count: number = 5, lang: 'it' | 'en' = '
 
   return articles.slice(0, count);
 }
+
+/**
+ * Fetch a single article summary for a specific topic, with search fallback
+ * and curated offline fallback (matching Android LessonRepositoryImpl.getLessonForTopic).
+ */
+export async function fetchArticleForTopic(
+  topic: string,
+  lang: 'it' | 'en' = 'it'
+): Promise<Article> {
+  // 1. Try direct title fetch
+  try {
+    const direct = await fetchSummaryByTitle(topic, lang);
+    if (direct && isValidArticle(direct)) {
+      return direct;
+    }
+  } catch (e) {
+    // continue to search fallback
+  }
+
+  // 2. Try Wikipedia search API
+  try {
+    const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(topic)}&format=json&origin=*&utf8=1&srlimit=3`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), WIKI_API_TIMEOUT);
+
+    const res = await fetch(searchUrl, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+        'Api-User-Agent': 'WikingoApp/1.0 (gamified microlearning)'
+      }
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      const hits: { title: string }[] = data?.query?.search || [];
+      for (const hit of hits) {
+        const art = await fetchSummaryByTitle(hit.title, lang);
+        if (art && isValidArticle(art)) {
+          return art;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`Search fallback failed for topic "${topic}":`, err);
+  }
+
+  // 3. Fallback to curated offline summary (matching Android)
+  return getCuratedOfflineSummary(topic, lang);
+}
+

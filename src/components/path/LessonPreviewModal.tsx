@@ -144,9 +144,11 @@ export const LessonPreviewModal: React.FC<LessonPreviewModalProps> = ({
                 disabled
                 className="flex items-center justify-center gap-2 opacity-80 cursor-not-allowed"
               >
-                <HeartCrack className="w-5 h-5" />
-                <span>
-                  {language === 'it' ? 'Vite terminate (Ricarica nei comandi)' : 'No hearts left (Refill in header)'}
+                <HeartCrack className="w-5 h-5 shrink-0" />
+                <span className="text-xs leading-tight">
+                  {language === 'en'
+                    ? 'You are out of hearts. Come back in 2 hours to recharge one.'
+                    : 'Hai esaurito i cuori. Torna tra 2 ore per ricaricarne uno.'}
                 </span>
               </Button>
             ) : (

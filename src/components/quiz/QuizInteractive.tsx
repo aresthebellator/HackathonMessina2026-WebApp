@@ -61,7 +61,9 @@ export const QuizInteractive: React.FC = () => {
               {t('quiz.game_over_title')}
             </h2>
             <p className="text-sm font-bold text-[#777777] dark:text-[#9CA3AF]">
-              {t('quiz.game_over_subtitle')}
+              {useQuizStore.getState().language === 'en'
+                ? 'You are out of hearts. Come back in 2 hours to recharge one.'
+                : 'Hai esaurito i cuori. Torna tra 2 ore per ricaricarne uno.'}
             </p>
           </div>
 

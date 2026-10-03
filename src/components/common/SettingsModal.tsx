@@ -256,7 +256,7 @@ export const SettingsModal: React.FC = () => {
             </div>
 
             {/* Heart Recovery */}
-            {lives < 5 && (
+            {lives < 10 && (
               <div className="pt-4 flex items-center justify-between">
                 <div className="space-y-0.5">
                   <span className="font-black text-sm text-[#FF4B4B]">
@@ -273,7 +273,7 @@ export const SettingsModal: React.FC = () => {
                   className="flex items-center gap-1.5"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  <span>{language === 'it' ? 'Ricarica a 5' : 'Refill to 5'}</span>
+                  <span>{language === 'it' ? 'Ricarica a 10' : 'Refill to 10'}</span>
                 </Button>
               </div>
             )}

@@ -16,6 +16,7 @@ import {
 import { generateSubjectRecognitionQuestion } from '@/services/quizGenerator';
 import { Article } from '@/types';
 import { useQuizStore } from '@/store/useQuizStore';
+import { soundManager } from '@/lib/sound';
 
 describe('Functional Alignment: i18n Localization', () => {
   it('should provide translations for both IT and EN for all core keys', () => {
@@ -102,7 +103,7 @@ describe('Functional Alignment: Timed Hearts Recharge (HeartsManager port)', () 
     });
   });
 
-  it('should recharge 1 life every 2 hours when lives < 5', () => {
+  it('should recharge 1 life every 2 hours when lives < 10', () => {
     const store = useQuizStore.getState();
     expect(store.lives).toBe(2);
 
@@ -112,14 +113,14 @@ describe('Functional Alignment: Timed Hearts Recharge (HeartsManager port)', () 
     expect(updated.lives).toBe(4); // 2 + 2 = 4
   });
 
-  it('should cap recharge at MAX_LIVES (5)', () => {
+  it('should cap recharge at MAX_LIVES (10)', () => {
     useQuizStore.setState({
       lives: 1,
-      lastLifeLostAt: Date.now() - 20 * 60 * 60 * 1000, // 20 hours ago
+      lastLifeLostAt: Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
     });
 
     useQuizStore.getState().checkLifeRecharge();
-    expect(useQuizStore.getState().lives).toBe(5);
+    expect(useQuizStore.getState().lives).toBe(10);
   });
 });
 
@@ -313,5 +314,25 @@ describe('Functional Alignment: Complete Bilingual Units Verification', () => {
       expect(getUnitLocalizedKeywords(unit, 'it')).toEqual(unit.keywords);
       expect(getUnitLocalizedKeywords(unit, 'en')).toEqual(unit.englishKeywords);
     });
+  });
+});
+
+describe('Functional Alignment: Audio Feedback Architecture (SoundFeedbackManager.kt Port)', () => {
+  it('should expose SoundFeedbackManager API matching the Android Wikingo implementation', () => {
+    expect(soundManager).toBeDefined();
+    expect(typeof soundManager.playCorrectFeedback).toBe('function');
+    expect(typeof soundManager.playIncorrectFeedback).toBe('function');
+    expect(typeof soundManager.playLessonCompleteFeedback).toBe('function');
+    expect(typeof soundManager.playClick).toBe('function');
+    expect(typeof soundManager.setSoundEnabled).toBe('function');
+    expect(typeof soundManager.isSoundEnabled).toBe('function');
+    expect(typeof soundManager.playBellTone).toBe('function');
+    expect(typeof soundManager.playXylophoneTone).toBe('function');
+  });
+
+  it('should maintain backward-compatible aliases for web-app components', () => {
+    expect(typeof soundManager.playSuccess).toBe('function');
+    expect(typeof soundManager.playError).toBe('function');
+    expect(typeof soundManager.playVictory).toBe('function');
   });
 });

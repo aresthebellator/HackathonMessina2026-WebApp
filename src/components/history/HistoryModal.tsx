@@ -147,9 +147,14 @@ export const HistoryModal: React.FC = () => {
                           <h4 className="text-base font-black text-[#3C3C3C] dark:text-white truncate">
                             {item.title}
                           </h4>
-                          <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-[#F7F7F7] dark:bg-[#1E2D34] text-[#3C3C3C] dark:text-[#E5E7EB] border border-[#E5E5E5] dark:border-[#37464F] shrink-0">
-                            {item.score}/{item.totalQuestions}
-                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-[#F7F7F7] dark:bg-[#1E2D34] text-[#3C3C3C] dark:text-[#E5E7EB] border border-[#E5E5E5] dark:border-[#37464F]">
+                              {item.score}/{item.totalQuestions}
+                            </span>
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-[#DDF4FF] dark:bg-[#1CB0F6]/20 text-[#0C70A2] dark:text-[#38BDF8] border border-[#BAE6FD] dark:border-[#0284C7]/40">
+                              {item.accuracy ?? (item.totalQuestions > 0 ? Math.floor((item.score / item.totalQuestions) * 100) : 0)}% {t('history.accuracy_label')}
+                            </span>
+                          </div>
                         </div>
                         {item.description && (
                           <p className="text-xs text-[#777777] dark:text-[#9CA3AF] truncate mt-0.5">

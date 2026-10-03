@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
-import { Article, FeedbackStatus, Question, QuizRound, SavedArticleItem, TopicHistory } from '@/types';
+import { Article, FeedbackStatus, Question, QuizRound, SavedArticleItem, TopicHistory, AuthUser } from '@/types';
 import { soundManager } from '@/lib/sound';
 import { getTodayDateString, isYesterday } from '@/lib/utils';
 import { LESSON_TITLES } from '@/lib/unitsData';
@@ -19,15 +19,16 @@ interface QuizStoreState {
   lives: number;
   maxLives: number;
   lastLifeLostAt: number | null;
+  nextRechargeAtMillis: number | null;
   isSoundEnabled: boolean;
   language: 'it' | 'en';
   topicHistory: TopicHistory[];
 
   // User Auth & Sync Simulation
-  user: { uid: string; displayName: string; email: string | null; isAnonymous: boolean } | null;
+  user: AuthUser | null;
   userEmail: string | null;
   isAuthenticated: boolean;
-  setUser: (user: { uid: string; displayName: string; email: string | null; isAnonymous: boolean } | null) => void;
+  setUser: (user: AuthUser | null) => void;
   recordTopicHistory: (item: Partial<TopicHistory>) => void;
 
   // Active Quiz Round
@@ -99,9 +100,10 @@ export const useQuizStore = create<QuizStoreState>()(
       totalQuestions: 0,
       gems: 100,
       savedArticles: [],
-      lives: 5,
-      maxLives: 5,
+      lives: 10,
+      maxLives: 10,
       lastLifeLostAt: null,
+      nextRechargeAtMillis: null,
       isSoundEnabled: true,
       language: 'it',
       topicHistory: [],
@@ -185,7 +187,7 @@ export const useQuizStore = create<QuizStoreState>()(
 
         if (isCorrect) {
           if (isSoundEnabled) soundManager.playSuccess();
-          const earnedXp = 15;
+          const earnedXp = 10;
           set({
             feedbackStatus: 'correct',
             isDrawerOpen: true,
@@ -212,11 +214,14 @@ export const useQuizStore = create<QuizStoreState>()(
           const newLives = Math.max(0, lives - 1);
           const now = Date.now();
           const updatedLastLifeLost = lives === maxLives ? now : (lastLifeLostAt || now);
+          const RECHARGE_INTERVAL_MS = 2 * 60 * 60 * 1000;
+          const nextRecharge = newLives < maxLives ? updatedLastLifeLost + RECHARGE_INTERVAL_MS : null;
           set({
             feedbackStatus: 'incorrect',
             isDrawerOpen: true,
             lives: newLives,
             lastLifeLostAt: updatedLastLifeLost,
+            nextRechargeAtMillis: nextRecharge,
             totalQuestions: totalQuestions + 1,
             currentRound: {
               ...currentRound,
@@ -235,7 +240,7 @@ export const useQuizStore = create<QuizStoreState>()(
       },
 
       nextQuestion: () => {
-        const { currentRound, isSoundEnabled, streak, bestStreak, lastActiveDate, completedRounds, gems, currentLessonIndex, completedLessons, lessonStars, topicHistory } = get();
+        const { currentRound, isSoundEnabled, streak, bestStreak, lastActiveDate, completedRounds, gems, currentLessonIndex, completedLessons, lessonStars, topicHistory, xp } = get();
         if (!currentRound) return;
 
         const nextIndex = currentRound.currentIndex + 1;
@@ -260,6 +265,15 @@ export const useQuizStore = create<QuizStoreState>()(
           }
           const updatedBestStreak = Math.max(bestStreak || 0, newStreak);
 
+          // Calculate Accuracy and XP using Android formula:
+          // accuracy = (score / totalQuestions) * 100
+          // xpEarned = (score * 10) + (accuracy >= 80 ? 15 : 5)
+          const totalQuestions = currentRound.questions.length;
+          const score = currentRound.score;
+          const accuracy = totalQuestions > 0 ? Math.floor((score / totalQuestions) * 100) : 0;
+          const bonusXp = accuracy >= 80 ? 15 : 5;
+          const sessionXp = (score * 10) + bonusXp;
+
           // Duolingo Lesson Progression
           let nextLessonIndex = currentLessonIndex;
           const updatedCompleted = [...completedLessons];
@@ -270,8 +284,8 @@ export const useQuizStore = create<QuizStoreState>()(
             if (!updatedCompleted.includes(lNum)) {
               updatedCompleted.push(lNum);
             }
-            // 3 stars if perfect (5/5), 2 stars if 4/5, 1 star if >= 3/5
-            const starsEarned = currentRound.score >= 5 ? 3 : currentRound.score >= 4 ? 2 : 1;
+            // 3 stars if perfect (100%), 2 stars if >= 80%, 1 star otherwise
+            const starsEarned = accuracy === 100 ? 3 : accuracy >= 80 ? 2 : 1;
             updatedStars[lNum] = Math.max(updatedStars[lNum] || 0, starsEarned);
 
             if (lNum >= nextLessonIndex) {
@@ -289,14 +303,17 @@ export const useQuizStore = create<QuizStoreState>()(
             id: Date.now(),
             pageId: firstArticle?.pageid || Date.now(),
             title: topicTitle,
+            topicTitle: topicTitle,
             description: firstArticle?.description || '',
             extract: firstArticle?.extract || '',
             thumbnailUrl: firstArticle?.thumbnail?.source,
             wikiUrl: firstArticle?.content_urls?.desktop?.page || `https://${get().language}.wikipedia.org`,
-            score: currentRound.score,
-            totalQuestions: currentRound.questions.length,
+            pageUrl: firstArticle?.content_urls?.desktop?.page || `https://${get().language}.wikipedia.org`,
+            score,
+            totalQuestions,
             completedAt: Date.now(),
-            xpEarned: currentRound.totalXp + 25,
+            xpEarned: sessionXp,
+            accuracy,
           };
 
           set({
@@ -305,6 +322,7 @@ export const useQuizStore = create<QuizStoreState>()(
             lastActiveDate: today,
             completedRounds: completedRounds + 1,
             gems: gems + 10,
+            xp: xp + bonusXp,
             currentLessonIndex: nextLessonIndex,
             completedLessons: updatedCompleted,
             lessonStars: updatedStars,
@@ -312,6 +330,7 @@ export const useQuizStore = create<QuizStoreState>()(
             currentRound: {
               ...currentRound,
               status: 'completed',
+              totalXp: sessionXp,
               completedAt: Date.now(),
             },
             isDrawerOpen: false,
@@ -373,7 +392,11 @@ export const useQuizStore = create<QuizStoreState>()(
       },
 
       toggleSound: () => {
-        set((s) => ({ isSoundEnabled: !s.isSoundEnabled }));
+        set((s) => {
+          const nextState = !s.isSoundEnabled;
+          soundManager.setSoundEnabled(nextState);
+          return { isSoundEnabled: nextState };
+        });
       },
 
       setLanguage: (lang: 'it' | 'en') => {
@@ -381,13 +404,19 @@ export const useQuizStore = create<QuizStoreState>()(
       },
 
       restoreLives: () => {
-        set({ lives: 5, lastLifeLostAt: null });
+        set({ lives: 10, maxLives: 10, lastLifeLostAt: null, nextRechargeAtMillis: null });
       },
 
       checkLifeRecharge: () => {
         const { lives, maxLives, lastLifeLostAt } = get();
-        if (lives >= maxLives || !lastLifeLostAt) return;
         const RECHARGE_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 hours matching android-app HeartsManager
+        if (lives >= maxLives) {
+          if (lastLifeLostAt !== null || get().nextRechargeAtMillis !== null) {
+            set({ lastLifeLostAt: null, nextRechargeAtMillis: null });
+          }
+          return;
+        }
+        if (!lastLifeLostAt) return;
         const now = Date.now();
         // Guard against system clock rollback or future timestamp
         const validLastLifeLostAt = lastLifeLostAt > now ? now : lastLifeLostAt;
@@ -396,9 +425,13 @@ export const useQuizStore = create<QuizStoreState>()(
         if (recharged > 0) {
           const newLives = Math.min(maxLives, lives + recharged);
           const newLastChange = newLives === maxLives ? null : validLastLifeLostAt + recharged * RECHARGE_INTERVAL_MS;
-          set({ lives: newLives, lastLifeLostAt: newLastChange });
-        } else if (lastLifeLostAt > now) {
-          set({ lastLifeLostAt: now });
+          const nextRecharge = newLives < maxLives && newLastChange ? newLastChange + RECHARGE_INTERVAL_MS : null;
+          set({ lives: newLives, lastLifeLostAt: newLastChange, nextRechargeAtMillis: nextRecharge });
+        } else {
+          set({
+            lastLifeLostAt: validLastLifeLostAt,
+            nextRechargeAtMillis: validLastLifeLostAt + RECHARGE_INTERVAL_MS,
+          });
         }
       },
 
@@ -453,6 +486,11 @@ export const useQuizStore = create<QuizStoreState>()(
         const { topicHistory, streak, bestStreak } = get();
         const finalTitle = item.title || (item as any).topicTitle || 'Wikipedia Topic';
         const finalUrl = item.wikiUrl || (item as any).pageUrl || 'https://wikipedia.org';
+        const score = item.score ?? 5;
+        const totalQuestions = item.totalQuestions ?? 5;
+        const accuracy = item.accuracy ?? (totalQuestions > 0 ? Math.floor((score / totalQuestions) * 100) : 0);
+        const xpEarned = item.xpEarned ?? ((score * 10) + (accuracy >= 80 ? 15 : 5));
+
         const newItem: TopicHistory = {
           id: item.id || Date.now(),
           pageId: item.pageId || Math.floor(Math.random() * 100000),
@@ -463,10 +501,11 @@ export const useQuizStore = create<QuizStoreState>()(
           thumbnailUrl: item.thumbnailUrl,
           wikiUrl: finalUrl,
           pageUrl: finalUrl,
-          score: item.score ?? 5,
-          totalQuestions: item.totalQuestions ?? 5,
+          score,
+          totalQuestions,
           completedAt: item.completedAt || Date.now(),
-          xpEarned: item.xpEarned ?? 90,
+          xpEarned,
+          accuracy,
         };
         set({
           topicHistory: [newItem, ...topicHistory],
@@ -500,6 +539,7 @@ export const useQuizStore = create<QuizStoreState>()(
           document.documentElement.classList.toggle('dark', Boolean(state.isDarkMode));
         }
         if (state) {
+          soundManager.setSoundEnabled(state.isSoundEnabled);
           state.checkLifeRecharge();
           if (!state.hasSeenWelcome && state.completedRounds === 0 && state.completedLessons.length === 0) {
             state.openWelcome();
@@ -517,13 +557,16 @@ export const useQuizStore = create<QuizStoreState>()(
         gems: state.gems,
         savedArticles: state.savedArticles,
         lives: state.lives,
+        maxLives: state.maxLives,
         lastLifeLostAt: state.lastLifeLostAt,
+        nextRechargeAtMillis: state.nextRechargeAtMillis,
         isSoundEnabled: state.isSoundEnabled,
         language: state.language,
         currentLessonIndex: state.currentLessonIndex,
         completedLessons: state.completedLessons,
         lessonStars: state.lessonStars,
         topicHistory: state.topicHistory,
+        user: state.user,
         userEmail: state.userEmail,
         isAuthenticated: state.isAuthenticated,
         isDarkMode: state.isDarkMode,

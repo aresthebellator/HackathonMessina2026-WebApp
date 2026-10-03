@@ -58,7 +58,7 @@ export const BottomDrawer: React.FC = () => {
                         {t('trainer.correct_title')}
                       </h3>
                       <span className="flex items-center gap-1 text-xs font-black text-[#58CC02] bg-white dark:bg-[#047857] px-2 py-0.5 rounded-lg border border-[#B0EC77] dark:border-[#059669]">
-                        <Sparkles className="w-3 h-3" /> +15 XP
+                        <Sparkles className="w-3 h-3" /> +10 XP
                       </span>
                     </div>
                   </div>
@@ -107,8 +107,25 @@ export const BottomDrawer: React.FC = () => {
           )}
         </div>
 
-        {/* Action Button */}
-        <div className="w-full sm:w-auto shrink-0">
+        {/* Action Button & Deepening Button */}
+        <div className="w-full sm:w-auto shrink-0 flex flex-col sm:flex-row items-center gap-2.5">
+          {feedbackStatus !== 'idle' && currentQuestion.shouldOfferDeepening && (
+            <a
+              href={currentQuestion.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                'w-full sm:w-auto px-4 py-3 rounded-2xl border-2 font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition-all active:scale-98',
+                isCorrect
+                  ? 'border-[#2A7000] text-[#2A7000] dark:border-[#86EFAC] dark:text-[#86EFAC] hover:bg-[#2A7000]/10'
+                  : 'border-[#B91C1C] text-[#B91C1C] dark:border-[#FDA4AF] dark:text-[#FDA4AF] hover:bg-[#B91C1C]/10'
+              )}
+            >
+              <span>{t('trainer.deepen_question')}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+
           {feedbackStatus === 'idle' ? (
             <Button
               variant="green"
