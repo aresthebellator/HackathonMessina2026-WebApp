@@ -1,0 +1,81 @@
+# This file is part of Wikingo
+# <https://github.com/aresthebellator/HackathonMessina2026-WebApp>.
+# Copyright (c) 2026 aresthebellator (exertia group).
+#
+# SPDX-License-Identifier: MIT
+# Licensed under the MIT License. See the LICENSE file in the project root
+# for the full license text.
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  license-headers:
+    name: License headers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Fails if a first-party source file lacks the MIT header; fix with `npm run license:fix`.
+      - name: Check MIT license headers
+        run: npm run license:check
+
+  metadata:
+    name: Citation metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate CITATION.cff
+        run: |
+          pip install cffconvert
+          cffconvert --validate
+      - name: Validate codemeta.json is well-formed JSON
+        run: python -m json.tool codemeta.json > /dev/null
+
+  build-and-test:
+    name: Build & test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [ 22, 24 ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      # `build` runs the TypeScript type check (tsc) before the Vite production build.
+      - name: Type check & build
+        run: npm run build
+      - name: Unit tests (Vitest)
+        run: npm test
+      - name: Firebase Admin tests (node:test)
+        run: npm run test:admin
+      - name: Upload production build
+        if: matrix.node-version == 24
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7

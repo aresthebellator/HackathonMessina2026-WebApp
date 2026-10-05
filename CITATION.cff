@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+title: "Wikingo: Wikipedia Micro-learning"
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - name: "aresthebellator (exertia group)"
+    alias: aresthebellator
+abstract: >-
+  Wikingo is a gamified micro-learning web app, developed at the Wikipedia
+  Hackathon in Messina (2-4 October 2026), that turns random Wikipedia
+  article summaries into short Duolingo-style quizzes (multiple choice,
+  cloze, true/false and subject recognition), organised in a themed lesson
+  path with hearts, streaks, sound feedback, Italian/English localisation,
+  an offline article pool and optional Firebase sign-in.
+keywords:
+  - Wikipedia
+  - micro-learning
+  - gamification
+  - quiz generation
+  - education
+  - progressive web app
+  - React
+  - TypeScript
+  - Firebase
+  - hackathon
+license: MIT
+repository-code: "https://github.com/aresthebellator/HackathonMessina2026-WebApp"
+identifiers:
+  - type: swh
+    value: "swh:1:dir:49db3ffbbfcd6cdd5d8f8a44b622204f9bbd2cdc"
+    description: "Source directory archived at Software Heritage"
+  - type: swh
+    value: "swh:1:rev:d8a3588efb88c498292c03bc5987bbfa7beeae32"
+    description: "Archived revision (commit d8a3588)"
+  - type: url
+    value: "https://archive.softwareheritage.org/swh:1:dir:49db3ffbbfcd6cdd5d8f8a44b622204f9bbd2cdc;origin=https://github.com/aresthebellator/HackathonMessina2026-WebApp;visit=swh:1:snp:f74267f0b9bfa571cd89b977bb03401ccedc943c;anchor=swh:1:rev:d8a3588efb88c498292c03bc5987bbfa7beeae32"
+    description: "Software Heritage snapshot with full context"
+commit: d8a3588efb88c498292c03bc5987bbfa7beeae32
+version: 1.0.0
+date-released: "2026-10-04"
