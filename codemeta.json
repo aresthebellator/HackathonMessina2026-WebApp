@@ -1,0 +1,60 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "Wikingo: Wikipedia Micro-learning",
+  "description": "Wikingo is a gamified micro-learning web app, developed at the Wikipedia Hackathon in Messina (2-4 October 2026), that turns random Wikipedia article summaries into short Duolingo-style quizzes (multiple choice, cloze, true/false and subject recognition), organised in a themed lesson path with hearts, streaks, sound feedback, Italian/English localisation, an offline article pool and optional Firebase sign-in.",
+  "identifier": "swh:1:dir:49db3ffbbfcd6cdd5d8f8a44b622204f9bbd2cdc;origin=https://github.com/aresthebellator/HackathonMessina2026-WebApp;visit=swh:1:snp:f74267f0b9bfa571cd89b977bb03401ccedc943c;anchor=swh:1:rev:d8a3588efb88c498292c03bc5987bbfa7beeae32",
+  "codeRepository": "https://github.com/aresthebellator/HackathonMessina2026-WebApp",
+  "issueTracker": "https://github.com/aresthebellator/HackathonMessina2026-WebApp/issues",
+  "continuousIntegration": "https://github.com/aresthebellator/HackathonMessina2026-WebApp/actions/workflows/ci.yml",
+  "license": "https://spdx.org/licenses/MIT",
+  "version": "1.0.0",
+  "softwareVersion": "1.0.0",
+  "datePublished": "2026-10-04",
+  "developmentStatus": "active",
+  "applicationCategory": "Education",
+  "programmingLanguage": [
+    "TypeScript",
+    "JavaScript",
+    "CSS",
+    "HTML"
+  ],
+  "runtimePlatform": [
+    "Web browser",
+    "Node.js 22+"
+  ],
+  "softwareRequirements": [
+    "react ^18.3.1",
+    "firebase ^12.19.0",
+    "@tanstack/react-query ^5.103.1",
+    "zustand ^5.0.15",
+    "framer-motion ^13.4.0"
+  ],
+  "keywords": [
+    "Wikipedia",
+    "micro-learning",
+    "gamification",
+    "quiz generation",
+    "education",
+    "progressive web app",
+    "React",
+    "TypeScript",
+    "Firebase",
+    "hackathon"
+  ],
+  "author": [
+    {
+      "@type": "Organization",
+      "name": "aresthebellator (exertia group)",
+      "url": "https://github.com/aresthebellator"
+    }
+  ],
+  "copyrightHolder": {
+    "@type": "Organization",
+    "name": "aresthebellator (exertia group)"
+  },
+  "copyrightYear": 2026,
+  "relatedLink": [
+    "https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/aresthebellator/HackathonMessina2026-WebApp"
+  ]
+}

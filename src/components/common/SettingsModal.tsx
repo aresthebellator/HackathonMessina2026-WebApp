@@ -1,3 +1,13 @@
+/*
+  This file is part of Wikingo
+  <https://github.com/aresthebellator/HackathonMessina2026-WebApp>.
+  Copyright (c) 2026 aresthebellator (exertia group).
+
+  SPDX-License-Identifier: MIT
+  Licensed under the MIT License. See the LICENSE file in the project root
+  for the full license text.
+*/
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Moon, Sun, Type, Eye, Volume2, VolumeX, Keyboard, RefreshCw, Sparkles, Globe, HelpCircle } from 'lucide-react';
